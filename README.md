@@ -22,7 +22,7 @@
     --gopay: #00AED6;
     --ovo: #4c3494;
     --bca: #005CA9;
-    --bri: #003F8A;
+    --blu: #003F8A;
     --tunai: #34d399;
   }
 
