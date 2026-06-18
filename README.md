@@ -22,7 +22,7 @@
     --gopay: #00AED6;
     --ovo: #4c3494;
     --bca: #005CA9;
-    --blu: #003F8A;
+    --blu: #0072CE;
     --tunai: #34d399;
   }
 
@@ -353,15 +353,74 @@
     transition: all 0.2s;
   }
   .source-btn.active { color: var(--text); border-color: currentColor; }
-  .source-btn[data-src="Dana"].active { color: var(--dana); background: rgba(17,142,234,0.1); }
-  .source-btn[data-src="GoPay"].active { color: var(--gopay); background: rgba(0,174,214,0.1); }
-  .source-btn[data-src="OVO"].active { color: #a78bfa; background: rgba(76,52,148,0.2); }
-  .source-btn[data-src="BCA"].active { color: #60a5fa; background: rgba(0,92,169,0.15); }
-  .source-btn[data-src="BRI"].active { color: #93c5fd; background: rgba(0,63,138,0.15); }
-  .source-btn[data-src="Tunai"].active { color: var(--tunai); background: rgba(52,211,153,0.1); }
-  .source-btn[data-src="Gajian"].active { color: var(--yellow); background: rgba(251,191,36,0.1); }
-  .source-btn[data-src="Transfer"].active { color: var(--accent2); background: rgba(124,106,247,0.1); }
-  .source-btn[data-src="Lainnya"].active { color: var(--muted); background: rgba(255,255,255,0.05); }
+
+  /* Manage wallets (sources) page */
+  .wallet-manage-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+  }
+  .wallet-manage-emoji {
+    width: 38px; height: 38px;
+    border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .wallet-manage-name { font-size: 14px; font-weight: 700; flex: 1; }
+  .wallet-manage-del {
+    font-size: 16px;
+    color: var(--muted);
+    padding: 4px 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+  .wallet-manage-del:hover { color: var(--red); background: rgba(248,113,113,0.1); }
+  .add-wallet-card {
+    background: var(--card);
+    border: 1px dashed var(--border);
+    border-radius: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
+  }
+  .add-wallet-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .add-wallet-row:last-child { margin-bottom: 0; }
+  .emoji-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .emoji-opt {
+    text-align: center;
+    padding: 7px 0;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+  .emoji-opt.active { border-color: var(--accent); background: rgba(124,106,247,0.15); }
+  .color-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .color-opt {
+    height: 26px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .color-opt.active { border-color: #fff; transform: scale(1.1); }
 
   .submit-btn {
     width: 100%;
@@ -732,17 +791,7 @@
     </div>
     <div class="scan-field">
       <label class="scan-field-label">Sumber Dompet</label>
-      <div class="scan-source-grid" id="scanSourceGrid">
-        <div class="scan-source-opt" data-src="Dana" onclick="selectScanSource(this)">🔵 Dana</div>
-        <div class="scan-source-opt" data-src="GoPay" onclick="selectScanSource(this)">💙 GoPay</div>
-        <div class="scan-source-opt" data-src="OVO" onclick="selectScanSource(this)">💜 OVO</div>
-        <div class="scan-source-opt" data-src="BCA" onclick="selectScanSource(this)">🏦 BCA</div>
-        <div class="scan-source-opt" data-src="BRI" onclick="selectScanSource(this)">🏦 BRI</div>
-        <div class="scan-source-opt" data-src="Tunai" onclick="selectScanSource(this)">💵 Tunai</div>
-        <div class="scan-source-opt" data-src="Gajian" onclick="selectScanSource(this)">💼 Gajian</div>
-        <div class="scan-source-opt" data-src="Transfer" onclick="selectScanSource(this)">↔️ Transfer</div>
-        <div class="scan-source-opt" data-src="Lainnya" onclick="selectScanSource(this)">➕ Lainnya</div>
-      </div>
+      <div class="scan-source-grid" id="scanSourceGrid"></div>
     </div>
     <div class="scan-field">
       <label class="scan-field-label">Detail Item (opsional)</label>
@@ -793,7 +842,38 @@
 <!-- DOMPET PAGE (hidden, triggered from nav) -->
 <div class="page" id="page-dompet">
   <div style="padding: 16px 20px 0; font-size:20px; font-weight:800;">Kelola Dompet 💳</div>
-  <div id="walletDetail" style="padding:16px;"></div>
+
+  <div class="section-title">Saldo per Sumber</div>
+  <div id="walletDetail" style="padding:0 16px;"></div>
+
+  <div class="section-title">Sumber / Dompet Tersedia</div>
+  <div style="padding:0 16px;">
+    <div id="walletSourcesList"></div>
+
+    <div class="add-wallet-card" id="addWalletCard" style="display:none;">
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label">Nama Sumber</label>
+        <input class="form-input" id="newWalletName" type="text" placeholder="Contoh: Jenius, SeaBank, Kas Kantor...">
+      </div>
+      <div class="form-group" style="margin-bottom:10px;">
+        <label class="form-label">Pilih Emoji</label>
+        <div class="emoji-picker-grid" id="emojiPickerGrid"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Pilih Warna</label>
+        <div class="color-picker-grid" id="colorPickerGrid"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;">
+        <button class="submit-btn" style="margin-top:0;background:var(--card2);border:1px solid var(--border);" onclick="cancelAddWallet()">Batal</button>
+        <button class="submit-btn" style="margin-top:0;" onclick="saveNewWallet()">💾 Tambah</button>
+      </div>
+    </div>
+
+    <button class="qa-btn" id="showAddWalletBtn" style="width:100%; flex-direction:row; justify-content:center; padding:14px; margin-bottom:16px;" onclick="showAddWallet()">
+      <span class="qa-icon" style="font-size:16px;">➕</span> Tambah Sumber Baru
+    </button>
+  </div>
+
   <div style="padding:0 16px;">
     <button class="submit-btn" style="background:linear-gradient(135deg,#dc2626,#f87171);" onclick="resetAllData()">🗑️ Reset Semua Data</button>
   </div>
@@ -825,17 +905,7 @@
 
     <div class="form-group">
       <label class="form-label">Sumber / Dompet</label>
-      <div class="source-grid" id="sourceGrid">
-        <div class="source-btn" data-src="Dana" onclick="selectSource(this)">🔵 Dana</div>
-        <div class="source-btn" data-src="GoPay" onclick="selectSource(this)">💙 GoPay</div>
-        <div class="source-btn" data-src="OVO" onclick="selectSource(this)">💜 OVO</div>
-        <div class="source-btn" data-src="BCA" onclick="selectSource(this)">🏦 BCA</div>
-        <div class="source-btn" data-src="BRI" onclick="selectSource(this)">🏦 BRI</div>
-        <div class="source-btn" data-src="Tunai" onclick="selectSource(this)">💵 Tunai</div>
-        <div class="source-btn" data-src="Gajian" onclick="selectSource(this)">💼 Gajian</div>
-        <div class="source-btn" data-src="Transfer" onclick="selectSource(this)">↔️ Transfer</div>
-        <div class="source-btn" data-src="Lainnya" onclick="selectSource(this)">➕ Lainnya</div>
-      </div>
+      <div class="source-grid" id="sourceGrid"></div>
     </div>
 
     <div class="form-group">
@@ -890,16 +960,42 @@ let currentType = 'expense';
 let selectedSource = null;
 let currentPeriod = 'minggu';
 
-const WALLET_COLORS = {
-  Dana: '#118EEA', GoPay: '#00AED6', OVO: '#a78bfa',
-  BCA: '#60a5fa', BRI: '#93c5fd', Tunai: '#34d399',
-  Gajian: '#fbbf24', Transfer: '#c084fc', Lainnya: '#9ca3af'
-};
-const WALLET_EMOJI = {
-  Dana: '🔵', GoPay: '💙', OVO: '💜',
-  BCA: '🏦', BRI: '🏦', Tunai: '💵',
-  Gajian: '💼', Transfer: '↔️', Lainnya: '➕'
-};
+const DEFAULT_WALLET_SOURCES = [
+  { name: 'Dana',     emoji: '🔵', color: '#118EEA' },
+  { name: 'GoPay',    emoji: '💙', color: '#00AED6' },
+  { name: 'OVO',      emoji: '💜', color: '#a78bfa' },
+  { name: 'BCA',      emoji: '🏦', color: '#60a5fa' },
+  { name: 'BLU',      emoji: '🏦', color: '#0072CE' },
+  { name: 'Tunai',    emoji: '💵', color: '#34d399' },
+  { name: 'Gajian',   emoji: '💼', color: '#fbbf24' },
+  { name: 'Transfer', emoji: '↔️', color: '#c084fc' },
+  { name: 'Lainnya',  emoji: '➕', color: '#9ca3af' }
+];
+
+const EMOJI_CHOICES = ['💰','💳','🏦','🐷','💵','🔵','💙','💜','💚','🧧','📱','💼','🎯','↔️','➕','🪙','💎','🏧'];
+const COLOR_CHOICES = ['#7c6af7','#34d399','#f87171','#fbbf24','#60a5fa','#a78bfa','#f472b6','#22d3ee','#fb923c','#4ade80','#e879f9','#94a3b8','#facc15','#0072CE'];
+
+let walletSources = JSON.parse(localStorage.getItem('dompetku_sources') || 'null') || DEFAULT_WALLET_SOURCES;
+saveWalletSources();
+
+let pickedEmoji = EMOJI_CHOICES[0];
+let pickedColor = COLOR_CHOICES[0];
+
+function saveWalletSources() {
+  localStorage.setItem('dompetku_sources', JSON.stringify(walletSources));
+}
+
+function getWalletColors() {
+  const map = {};
+  walletSources.forEach(w => map[w.name] = w.color);
+  return map;
+}
+function getWalletEmojis() {
+  const map = {};
+  walletSources.forEach(w => map[w.name] = w.emoji);
+  return map;
+}
+
 const CAT_EMOJI = {
   Makan: '🍜', Transport: '🚌', Belanja: '🛍️', Hiburan: '🎮',
   Kesehatan: '💊', Tagihan: '📱', Kopi: '☕', Bensin: '⛽',
@@ -911,6 +1007,8 @@ function init() {
   const now = new Date();
   document.getElementById('headerDate').textContent =
     now.toLocaleDateString('id-ID', { weekday:'short', day:'numeric', month:'short' });
+  renderSourceGrid();
+  renderScanSourceGrid();
   renderAll();
   updateApiKeyBanner();
 }
@@ -921,6 +1019,7 @@ function renderAll() {
   renderTransactions();
   renderReport();
   renderWalletDetail();
+  renderWalletSourcesManage();
 }
 
 // ==================== BALANCE ====================
@@ -949,6 +1048,8 @@ function getWallets() {
 
 function renderWallets() {
   const wallets = getWallets();
+  const colors = getWalletColors();
+  const emojis = getWalletEmojis();
   const el = document.getElementById('walletsList');
   if (Object.keys(wallets).length === 0) {
     el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:4px 0;">Belum ada data dompet.</div>`;
@@ -957,8 +1058,8 @@ function renderWallets() {
   el.innerHTML = Object.entries(wallets).map(([name, bal]) => `
     <div class="wallet-chip">
       <div class="wallet-name">
-        <span class="wallet-dot" style="background:${WALLET_COLORS[name]||'#9ca3af'}"></span>
-        ${WALLET_EMOJI[name]||'💰'} ${name}
+        <span class="wallet-dot" style="background:${colors[name]||'#9ca3af'}"></span>
+        ${emojis[name]||'💰'} ${name}
       </div>
       <div class="wallet-bal" style="color:${bal>=0?'var(--green)':'var(--red)'}">${formatRp(bal)}</div>
     </div>
@@ -967,6 +1068,8 @@ function renderWallets() {
 
 function renderWalletDetail() {
   const wallets = getWallets();
+  const colors = getWalletColors();
+  const emojis = getWalletEmojis();
   const el = document.getElementById('walletDetail');
   if (Object.keys(wallets).length === 0) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">💳</div><p>Belum ada data dompet atau rekening.</p></div>`;
@@ -974,7 +1077,7 @@ function renderWalletDetail() {
   }
   el.innerHTML = Object.entries(wallets).map(([name, bal]) => `
     <div class="tx-item">
-      <div class="tx-icon" style="background:${WALLET_COLORS[name]||'#1e1e28'}22;font-size:22px;">${WALLET_EMOJI[name]||'💳'}</div>
+      <div class="tx-icon" style="background:${colors[name]||'#1e1e28'}22;font-size:22px;">${emojis[name]||'💳'}</div>
       <div class="tx-info">
         <div class="tx-name">${name}</div>
         <div class="tx-meta">${transactions.filter(t=>t.source===name).length} transaksi</div>
@@ -984,9 +1087,109 @@ function renderWalletDetail() {
   `).join('');
 }
 
+// ==================== MANAGE WALLET SOURCES ====================
+function renderSourceGrid() {
+  const el = document.getElementById('sourceGrid');
+  if (!el) return;
+  el.innerHTML = walletSources.map(w => `
+    <div class="source-btn" data-src="${w.name}" data-color="${w.color}" onclick="selectSource(this)">${w.emoji} ${w.name}</div>
+  `).join('');
+}
+
+function renderScanSourceGrid() {
+  const el = document.getElementById('scanSourceGrid');
+  if (!el) return;
+  el.innerHTML = walletSources.map(w => `
+    <div class="scan-source-opt" data-src="${w.name}" onclick="selectScanSource(this)">${w.emoji} ${w.name}</div>
+  `).join('');
+  const def = el.querySelector('[data-src="Tunai"]') || el.querySelector('.scan-source-opt');
+  if (def) { def.classList.add('active'); scanSelectedSource = def.dataset.src; }
+}
+
+function renderWalletSourcesManage() {
+  const el = document.getElementById('walletSourcesList');
+  if (!el) return;
+  el.innerHTML = walletSources.map(w => `
+    <div class="wallet-manage-item">
+      <div class="wallet-manage-emoji" style="background:${w.color}22;">${w.emoji}</div>
+      <div class="wallet-manage-name">${w.name}</div>
+      <div class="wallet-manage-del" onclick="deleteWalletSource('${w.name.replace(/'/g, "\\'")}')">✕</div>
+    </div>
+  `).join('');
+}
+
+function showAddWallet() {
+  document.getElementById('addWalletCard').style.display = 'block';
+  document.getElementById('showAddWalletBtn').style.display = 'none';
+  pickedEmoji = EMOJI_CHOICES[0];
+  pickedColor = COLOR_CHOICES[0];
+  document.getElementById('emojiPickerGrid').innerHTML = EMOJI_CHOICES.map((e,i) => `
+    <div class="emoji-opt ${i===0?'active':''}" data-emoji="${e}" onclick="pickEmoji(this)">${e}</div>
+  `).join('');
+  document.getElementById('colorPickerGrid').innerHTML = COLOR_CHOICES.map((c,i) => `
+    <div class="color-opt ${i===0?'active':''}" data-color="${c}" style="background:${c};" onclick="pickColor(this)"></div>
+  `).join('');
+  document.getElementById('newWalletName').focus();
+}
+
+function cancelAddWallet() {
+  document.getElementById('addWalletCard').style.display = 'none';
+  document.getElementById('showAddWalletBtn').style.display = 'flex';
+  document.getElementById('newWalletName').value = '';
+}
+
+function pickEmoji(el) {
+  document.querySelectorAll('.emoji-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  pickedEmoji = el.dataset.emoji;
+}
+function pickColor(el) {
+  document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+  pickedColor = el.dataset.color;
+}
+
+function saveNewWallet() {
+  const name = document.getElementById('newWalletName').value.trim();
+  if (!name) {
+    document.getElementById('newWalletName').focus();
+    document.getElementById('newWalletName').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('newWalletName').style.borderColor = '', 1000);
+    return;
+  }
+  if (walletSources.some(w => w.name.toLowerCase() === name.toLowerCase())) {
+    showInfo('Sudah Ada', `Sumber dengan nama "${name}" sudah ada.`);
+    return;
+  }
+  walletSources.push({ name, emoji: pickedEmoji, color: pickedColor });
+  saveWalletSources();
+  cancelAddWallet();
+  renderSourceGrid();
+  renderScanSourceGrid();
+  renderWalletSourcesManage();
+  renderWallets();
+  renderWalletDetail();
+  showInfo('Berhasil! 🎉', `Sumber "${name}" sudah ditambahkan.`);
+}
+
+function deleteWalletSource(name) {
+  const usedCount = transactions.filter(t => t.source === name).length;
+  const msg = usedCount > 0
+    ? `Sumber "${name}" punya ${usedCount} transaksi tercatat. Sumber akan dihapus dari daftar pilihan, tapi transaksi lama tetap tersimpan dengan label ini.`
+    : `Hapus sumber "${name}" dari daftar pilihan?`;
+  showConfirm('Hapus Sumber', msg, () => {
+    walletSources = walletSources.filter(w => w.name !== name);
+    saveWalletSources();
+    renderSourceGrid();
+    renderScanSourceGrid();
+    renderWalletSourcesManage();
+  });
+}
+
 // ==================== TRANSACTIONS ====================
 function renderTransactions() {
   const el = document.getElementById('txList');
+  const colors = getWalletColors();
   const sorted = [...transactions].sort((a,b) => b.id - a.id).slice(0, 30);
   if (sorted.length === 0) {
     el.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><p>Belum ada transaksi.<br>Tap <strong>+</strong> untuk tambah transaksi.</p></div>`;
@@ -1005,7 +1208,7 @@ function renderTransactions() {
         <div class="tx-info">
           <div class="tx-name">${t.note || cat}</div>
           <div class="tx-meta">
-            <span class="tx-source" style="color:${WALLET_COLORS[t.source]||'#9ca3af'}">${t.source||'Lainnya'}</span>
+            <span class="tx-source" style="color:${colors[t.source]||'#9ca3af'}">${t.source||'Lainnya'}</span>
             <span>${dateStr}</span>
           </div>
         </div>
@@ -1219,12 +1422,6 @@ function updateApiKeyBanner() {
 // ==================== SCAN STRUK ====================
 let scanImageBase64 = null;
 let scanSelectedSource = 'Tunai';
-
-// Default source = Tunai
-document.addEventListener('DOMContentLoaded', () => {
-  const def = document.querySelector('.scan-source-opt[data-src="Tunai"]');
-  if (def) def.classList.add('active');
-});
 
 function onFileSelected(input) {
   const file = input.files[0];
